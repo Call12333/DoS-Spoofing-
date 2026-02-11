@@ -1,0 +1,24 @@
+Durante la ejecución en el entorno de laboratorio, se observaron los siguientes efectos en el Switch objetivo:
+
+Contadores de Tráfico: Un incremento masivo y constante en los contadores de paquetes CDP de entrada.
+
+Errores de Checksum: El dispositivo registró múltiples errores debido a la naturaleza malformada de algunos paquetes generados, lo que confirma que el plano de control intentó procesarlos.
+
+Plano de Control: Se evidenció que, aunque la tabla de vecinos (show cdp neighbors) tiene mecanismos de protección, el procesamiento interno del dispositivo se ve afectado por el ruido generado en la red.
+
+🛠️ Cómo ejecutar (Laboratorio)
+Asegúrate de tener instalada la librería Scapy:
+
+Bash
+pip install scapy
+Ejecuta el script especificando tu interfaz conectada al switch:
+
+Bash
+sudo python3 cdp_flood.py
+🔐 Medidas de Mitigación
+Para prevenir este comportamiento en entornos de producción, se recomienda:
+
+Deshabilitar CDP: En puertos que conectan a dispositivos finales (PCs, servidores) usando el comando no cdp enable.
+
+Control de Planos: Implementar políticas de control de plano (CoPP) para limitar la tasa de paquetes CDP que la CPU debe procesar.
+

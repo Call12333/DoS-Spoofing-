@@ -1,0 +1,45 @@
+📂 Análisis del Código: CDP Flooding
+El script utiliza Scapy para construir tramas personalizadas que no siguen el flujo normal de TCP/IP, sino que se inyectan directamente en la Capa 2.
+
+1. Definición de la Identidad Falsa (Payload)
+El código utiliza un bucle para generar datos aleatorios que rellenan los campos TLV (Type-Length-Value) del protocolo CDP:
+
+Device ID: Genera nombres de hosts aleatorios (ej. Router_Falso_1, Switch_Core_X).
+
+Port ID: Simula que el anuncio viene de puertos específicos como GigabitEthernet0/1.
+
+Software Version: Inyecta una cadena de texto larga que imita el banner de Cisco IOS.
+
+2. Encapsulación de Capa 2 (Especializada)
+A diferencia de un paquete normal, CDP no usa IP. El código construye la trama así:
+
+Ethernet Destino: 01:00:0c:cc:cc:cc (Dirección Multicast exclusiva de Cisco).
+
+LLC / SNAP: El código añade estas cabeceras para que el Switch acepte el paquete como un anuncio de "vecino" legítimo.
+
+3. El Bucle de Inundación (while True)
+Python
+while True:
+    # El script genera un paquete nuevo con datos aleatorios
+    # y lo envía por la interfaz (ej. eth0)
+    sendp(paquete_cdp, iface="eth0", verbose=False)
+Este bucle es el corazón del ataque DoS. Envía miles de estos anuncios por segundo.
+
+📉 ¿Qué causa este código en el Switch? (Resultados)
+Según tu informe, el impacto se divide en tres áreas:
+
+Saturación del Plano de Control: El procesador (CPU) del switch debe interrumpir sus tareas para leer cada paquete, verificar el checksum y tratar de identificar al "nuevo vecino".
+
+Errores de Checksum: Como el script genera datos aleatorios rápidamente, muchos paquetes llegan malformados. El switch registra estos errores, lo que consume ciclos de CPU adicionales.
+
+Contadores de Tráfico: Si ejecutas show cdp traffic en el switch, verás que el número de paquetes recibidos aumenta exponencialmente, lo que indica que el ataque está "golpeando" la interfaz.
+
+🛡️ Explicación de la Mitigación en el Código
+En tu reporte mencionas el comando no cdp enable. Esto es vital porque:
+
+A nivel de código: El ataque solo funciona si el puerto del switch está "escuchando" anuncios CDP.
+
+Acción: Al deshabilitarlo en puertos de usuario, el switch ignora completamente cualquier trama enviada a la dirección 01:00:0c:cc:cc:cc, haciendo que el script sea inofensivo.
+
+
+
